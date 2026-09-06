@@ -53,7 +53,7 @@ async def freeagent_sidebar(ctx, **kwargs) -> ui.UINode:
                             ui.Text("Environment", variant="caption"),
                             ui.Select(
                                 param_name="environment",
-                                default="production",
+                                value="production",
                                 options=[
                                     {"label": "Production (api.freeagent.com)", "value": "production"},
                                     {"label": "Sandbox (api.sandbox.freeagent.com)", "value": "sandbox"},
