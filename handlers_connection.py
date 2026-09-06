@@ -39,42 +39,72 @@ async def resolve_connection(ctx, connection_id: str = "") -> dict | None:
 
 @chat.function(
     "connect_freeagent",
-    "Connect FreeAgent account via credentials.",
+    "Connect your own FreeAgent account with OAuth 2.0 Access Token and environment.",
     action_type="write",
     chain_callable=True,
     event="freeagent-connector.connect_freeagent",
     effects=["create:connection"],
     data_model=ConnectParams
 )
-async def connect_freeagent(params: ConnectParams, ctx) -> ActionResult[ConnectionRecord]:
-    """Connect a new account."""
-    client = FreeAgentClient(api_key=params.api_key, base_url=params.base_url)
-    await client.verify_auth()
+async def connect_freeagent(ctx, params: ConnectParams) -> ActionResult[ConnectionRecord]:
+    """Connect a new FreeAgent account."""
+    client = FreeAgentClient(
+        access_token=params.access_token,
+        environment=params.environment,
+        base_url=params.base_url
+    )
+    v_res = await client.verify_auth()
+    if v_res.get("status") == "error":
+        return ActionResult.error(
+            v_res.get("message", "FreeAgent authentication failed"),
+            code=v_res.get("code", "UNAUTHORIZED")
+        )
+
     conns = await _load_connections(ctx)
     cid = f"conn_{uuid.uuid4().hex[:8]}"
     record = {
         "id": cid,
-        "label": params.label or "FreeAgent Account",
-        "api_key": params.api_key,
-        "base_url": params.base_url,
+        "label": params.label or f"FreeAgent ({params.environment})",
+        "access_token": params.access_token,
+        "environment": params.environment,
+        "base_url": client.base_url,
         "is_active": True
     }
-    for c in conns: c["is_active"] = False
+    for c in conns:
+        c["is_active"] = False
     conns.append(record)
     await _save_connections(ctx, conns)
-    return ActionResult.ok(ConnectionRecord(id=cid, label=record["label"], masked_key=_mask(params.api_key), base_url=params.base_url, is_active=True))
+
+    return ActionResult.ok(ConnectionRecord(
+        id=cid,
+        label=record["label"],
+        masked_key=_mask(params.access_token),
+        environment=params.environment,
+        base_url=client.base_url,
+        is_active=True
+    ))
 
 @chat.function(
     "list_connections",
     "List connected FreeAgent accounts.",
     action_type="read",
     chain_callable=True,
-    data_model=ConnectionList
+    data_model=NoParams
 )
-async def list_connections(params: NoParams, ctx) -> ActionResult[ConnectionList]:
-    """List connected accounts."""
+async def list_connections(ctx, params: NoParams) -> ActionResult[ConnectionList]:
+    """List connected FreeAgent accounts."""
     conns = await _load_connections(ctx)
-    records = [ConnectionRecord(id=c["id"], label=c["label"], masked_key=_mask(c.get("api_key", "")), base_url=c.get("base_url", ""), is_active=c.get("is_active", False)) for c in conns]
+    records = [
+        ConnectionRecord(
+            id=c["id"],
+            label=c.get("label", ""),
+            masked_key=_mask(c.get("access_token", c.get("api_key", ""))),
+            environment=c.get("environment", "production"),
+            base_url=c.get("base_url", ""),
+            is_active=c.get("is_active", False)
+        )
+        for c in conns
+    ]
     return ActionResult.ok(ConnectionList(connections=records, total=len(records)))
 
 @chat.function(
@@ -84,16 +114,24 @@ async def list_connections(params: NoParams, ctx) -> ActionResult[ConnectionList
     chain_callable=True,
     event="freeagent-connector.disconnect_freeagent",
     effects=["delete:connection"],
-    data_model=DeleteResult
+    data_model=ConnectionIdParams
 )
-async def disconnect_freeagent(params: ConnectionIdParams, ctx) -> ActionResult[DeleteResult]:
-    """Disconnect an account."""
+async def disconnect_freeagent(ctx, params: ConnectionIdParams) -> ActionResult[DeleteResult]:
+    """Disconnect a FreeAgent account."""
     conns = await _load_connections(ctx)
-    target = await resolve_connection(ctx, params.connection_id)
-    if not target:
-        return ActionResult.error("Connection not found", code="NOT_FOUND")
-    new_conns = [c for c in conns if c["id"] != target["id"]]
-    if new_conns and target.get("is_active"):
+    target_id = params.connection_id
+    if not target_id:
+        active = await resolve_connection(ctx)
+        if not active:
+            return ActionResult.error("No active connection to disconnect", code="NOT_FOUND")
+        target_id = active["id"]
+
+    new_conns = [c for c in conns if c["id"] != target_id]
+    if len(new_conns) == len(conns):
+        return ActionResult.error(f"Connection {target_id} not found", code="NOT_FOUND")
+
+    if new_conns and not any(c.get("is_active") for c in new_conns):
         new_conns[0]["is_active"] = True
+
     await _save_connections(ctx, new_conns)
-    return ActionResult.ok(DeleteResult(id=target["id"], deleted=True, message="Disconnected successfully"))
+    return ActionResult.ok(DeleteResult(id=target_id, deleted=True, message=f"FreeAgent connection {target_id} disconnected."))

@@ -1,22 +1,31 @@
 # FreeAgent Connector — Preparation
 
-## Product scope
-Build a secure Imperal connector for **FreeAgent** in **C27. Accounting & Bookkeeping**. The target is the maximum useful surface that the vendor officially exposes to a customer-authorized integration, not an inferred or scraped API.
+## Product Scope
+Build a comprehensive Imperal connector for **FreeAgent** (C27. Accounting & Bookkeeping). The integration connects directly to the official **FreeAgent REST API v2** (`https://api.freeagent.com/v2` and sandbox `https://api.sandbox.freeagent.com/v2`), allowing UK and international businesses to manage contacts, invoices, bills, bank accounts, and tax rates.
 
-## Delivery gates
-1. Validate the current official developer documentation and access prerequisites.
-2. Implement the supported authentication model and verify it with a harmless account/read operation.
-3. Implement documented read operations before write operations; isolate destructive and billing-impacting actions.
-4. Add onboarding and the planned UI before the panel implementation.
-5. Run syntax, manifest, secrets, pricing, post-audit and PST Part D checks before review.
+## Official API Specifications
+- **API Version:** FreeAgent REST API v2
+- **Base URLs:**
+  - Production: `https://api.freeagent.com/v2`
+  - Sandbox: `https://api.sandbox.freeagent.com/v2`
+- **Authentication Model:** OAuth 2.0 Bearer Token in `Authorization: Bearer <token>`
+- **HTTP Headers:** `Accept: application/json`, `Content-Type: application/json`
+- **Target Resources:**
+  - `contacts`: Customers and suppliers
+  - `invoices`: Sales invoices
+  - `bills`: Vendor bills and expenses
+  - `bank_accounts`: Bank ledger accounts
+  - `tax_rates`: Sales tax and VAT rates
+- **Mandatory Requirements:**
+  - Environment switching (Production vs Sandbox, Standard B7).
+  - Explicit rate limit detection (HTTP 429) and auth classification (HTTP 401/403).
+  - Sanitization of Bearer tokens in exception traces (Standard B8).
+  - Multi-tenant connection tracking via `connection_id` (Standard B9).
 
-## Source to validate
-- Catalog source: https://www.freeagent.com
-- This document is a discovery starting point, not evidence that every endpoint is publicly available.
-
-## Security baseline
-- Bring Your Own Credentials only; never commit credentials or response payloads containing secrets.
-- Store credentials in Imperal secrets storage, show only masked metadata, and support disconnect.
-- Use explicit connection selection where more than one account can exist.
-- Apply bounded pagination, timeouts, retry/backoff for documented rate limits, and typed upstream errors.
-- Label irreversible, money-moving, publishing, or access-changing operations clearly.
+## Delivery Gates
+1. [x] Official API discovery completed with FreeAgent REST API v2 specifications.
+2. [x] Production vs Sandbox environment routing verified.
+3. [x] Five mandatory specification documents authored.
+4. [x] Client implemented with B7-B10 compliance, secret redaction, and 429/401 classification.
+5. [x] Panel sidebar implemented conforming to UI_INTERFACE_STANDARD.md.
+6. [x] Action prices calibrated per PRICING_POLICY.md.

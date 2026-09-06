@@ -14,11 +14,14 @@ def _settings_button() -> ui.UINode:
 
 def _help_modal() -> ui.UINode:
     return ui.Modal(
-        trigger=ui.Button("How do I set this up?", variant="ghost", size="sm"),
+        trigger=ui.Button("How do I connect FreeAgent?", variant="ghost", size="sm"),
         title="Connecting FreeAgent",
         children=[
             ui.Text(
-                "1. Sign in to your FreeAgent account and navigate to API/Integration or OAuth settings.\n2. Choose your preferred authentication method (OAuth SSO, API Key / Personal Token, or Client Credentials / Service Account).\n3. Authorize or enter your credentials above and click Connect.",
+                "1. Sign in to your FreeAgent account (or developer dashboard at dev.freeagent.com).\n"
+                "2. Create an OAuth Application or generate a personal Bearer Access Token.\n"
+                "3. Select your environment: Production (api.freeagent.com) or Sandbox (api.sandbox.freeagent.com).\n"
+                "4. Enter the Access Token above and click Connect FreeAgent.",
                 variant="body"
             )
         ]
@@ -32,80 +35,43 @@ async def freeagent_sidebar(ctx, **kwargs) -> ui.UINode:
         align="stretch",
         children=[
             ui.Text("FreeAgent", variant="heading"),
-            ui.Stack(
-                direction="v",
-                gap=1,
-                align="stretch",
-                children=[
-                    ui.Text("Manage your FreeAgent connections and integrations.", variant="caption"),
-                ]
-            ),
+            ui.Text("Manage invoices, contacts, bills, bank accounts and tax rates via FreeAgent REST API v2.", variant="caption"),
             ui.Divider(),
-            ui.Stack(
-                direction="v",
-                gap=2,
-                align="stretch",
+            ui.Form(
+                submit_label="Connect FreeAgent",
+                action=ui.Call("connect_freeagent"),
                 children=[
-                    ui.Button(
-                        "Sign in with FreeAgent (OAuth / SSO)",
-                        variant="primary",
-                        size="sm",
-                        icon="login"
-                    ),
-                    ui.Divider(),
-                    ui.Text("Or connect via API Key or Service Account", variant="caption"),
-                    ui.Form(
-                        submit_label="Connect FreeAgent",
-                        action=ui.Call("connect_freeagent"),
+                    ui.Stack(
+                        direction="v",
+                        gap=2,
+                        align="stretch",
                         children=[
-                            ui.Stack(
-                                direction="v",
-                                gap=2,
-                                align="stretch",
-                                children=[
-                                    ui.Stack(
-                                        direction="v",
-                                        gap=1,
-                                        align="stretch",
-                                        children=[
-                                            ui.Text("Authentication Method", variant="label"),
-                                            ui.Select(
-                                                param_name="auth_mode",
-                                                value="api_key",
-                                                options=[
-                                                    {"label": "API Key / Personal Access Token", "value": "api_key"},
-                                                    {"label": "OAuth 2.0 Bearer Token", "value": "oauth"},
-                                                    {"label": "Client Credentials (Service Account / Machine-to-Machine)", "value": "client_credentials"},
-                                                ]
-                                            ),
-                                        ]
-                                    ),
-                                    ui.Stack(
-                                        direction="v",
-                                        gap=1,
-                                        align="stretch",
-                                        children=[
-                                            ui.Text("Connection Label", variant="label"),
-                                            ui.Input(param_name="label", placeholder="e.g. Production FreeAgent"),
-                                        ]
-                                    ),
-                                    ui.Stack(
-                                        direction="v",
-                                        gap=1,
-                                        align="stretch",
-                                        children=[
-                                            ui.Text("API Key / Access Token", variant="label"),
-                                            ui.Input(param_name="api_key", placeholder="Paste API Key, Bearer or Access Token"),
-                                        ]
-                                    ),
+                            ui.Text("Friendly Label", variant="caption"),
+                            ui.Input(param_name="label", placeholder="e.g. Acme FreeAgent UK"),
+                            ui.Text("OAuth 2.0 Access Token", variant="caption"),
+                            ui.Input(param_name="access_token", placeholder="Paste FreeAgent Bearer Token"),
+                            ui.Text("Environment", variant="caption"),
+                            ui.Select(
+                                param_name="environment",
+                                default="production",
+                                options=[
+                                    {"label": "Production (api.freeagent.com)", "value": "production"},
+                                    {"label": "Sandbox (api.sandbox.freeagent.com)", "value": "sandbox"},
                                 ]
-                            )
+                            ),
+                            ui.Text("Custom Base URL (optional)", variant="caption"),
+                            ui.Input(param_name="base_url", placeholder="https://api.freeagent.com/v2"),
                         ]
-                    ),
+                    )
                 ]
             ),
-            _help_modal(),
-            ui.Spacer(),
-            _settings_button(),
+            ui.Stack(
+                direction="h",
+                gap=2,
+                children=[
+                    _help_modal(),
+                    _settings_button()
+                ]
+            )
         ]
     )

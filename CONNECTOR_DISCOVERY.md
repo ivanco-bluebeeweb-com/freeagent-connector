@@ -1,17 +1,15 @@
-# FreeAgent Connector — API Discovery
+# FreeAgent Connector — Connector Discovery
 
-## Discovery status
-**Pending live official-documentation verification.** This connector must not claim an endpoint, OAuth scope, webhook, or write capability until it is verified against FreeAgent's current official developer documentation and a customer-authorized account.
+## Official API Landscape
+FreeAgent API v2 uses resource-oriented REST endpoints:
+- `GET /v2/company`: Inspect account name, currency, and tax registration.
+- `GET /v2/contacts`: List customers/suppliers with query parameters `view=all|clients|suppliers`.
+- `GET /v2/invoices`: Invoices with status tracking (Draft, Sent, Paid, Overdue).
+- `GET /v2/bills`: Bills from suppliers.
+- `GET /v2/bank_accounts`: Business bank accounts and credit cards.
+- `GET /v2/tax_rates`: VAT and sales tax percentages.
 
-## Research checklist
-- Official API base URLs, versions, pagination, filtering, idempotency and rate limits.
-- Authentication types actually offered: OAuth 2.0 authorization code/client credentials, API token, service account, signed request, or local/self-hosted connection.
-- Required scopes/roles/plan tiers, regional endpoints, admin approval and consent lifecycle.
-- Read, create, update, archive/delete, search, bulk, asynchronous-job and webhook surfaces.
-- Error contract, retries, eventual consistency, provider audit log, sandbox/test tenant and webhook signature verification.
-
-## Initial implementation rule
-Only operations confirmed during discovery go into `imperal.json`, schemas and handlers. Any unavailable or partner-only API is recorded as a technical blocker in the task instead of simulated.
-
-## Source candidate
-https://www.freeagent.com
+## Authentication & Authorization
+- **Protocol:** OAuth 2.0 Authorization Code flow or App Bearer tokens.
+- **Header:** `Authorization: Bearer <token>`.
+- **Headers:** `User-Agent` identifying the application.

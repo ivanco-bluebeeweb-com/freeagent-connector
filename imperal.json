@@ -14,7 +14,7 @@
   "tools": [
     {
       "name": "connect_freeagent",
-      "description": "Connect FreeAgent account via credentials.",
+      "description": "Connect your own FreeAgent account with OAuth 2.0 Access Token and environment.",
       "action_type": "write",
       "chain_callable": true,
       "effects": [
@@ -25,24 +25,30 @@
         "properties": {
           "label": {
             "default": "",
-            "description": "Friendly connection label, e.g. Acme FreeAgent.",
+            "description": "Friendly connection label, e.g. Acme FreeAgent UK.",
             "title": "Label",
             "type": "string"
           },
-          "api_key": {
-            "description": "Accounting API Key / OAuth Access Token.",
-            "title": "Api Key",
+          "access_token": {
+            "description": "FreeAgent OAuth 2.0 Access Token or Bearer token.",
+            "title": "Access Token",
+            "type": "string"
+          },
+          "environment": {
+            "default": "production",
+            "description": "Environment: 'production' (api.freeagent.com) or 'sandbox' (api.sandbox.freeagent.com).",
+            "title": "Environment",
             "type": "string"
           },
           "base_url": {
             "default": "",
-            "description": "Optional custom base URL or instance domain.",
+            "description": "Optional custom base URL (overrides default environment endpoint).",
             "title": "Base Url",
             "type": "string"
           }
         },
         "required": [
-          "api_key"
+          "access_token"
         ],
         "title": "ConnectParams",
         "type": "object"
