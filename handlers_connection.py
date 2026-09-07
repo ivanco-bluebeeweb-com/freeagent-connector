@@ -75,7 +75,7 @@ async def connect_freeagent(ctx, params: ConnectParams) -> ActionResult[Connecti
     conns.append(record)
     await _save_connections(ctx, conns)
 
-    return ActionResult.ok(ConnectionRecord(
+    return ActionResult.success(ConnectionRecord(
         id=cid,
         label=record["label"],
         masked_key=_mask(params.access_token),
@@ -105,7 +105,7 @@ async def list_connections(ctx, params: NoParams) -> ActionResult[ConnectionList
         )
         for c in conns
     ]
-    return ActionResult.ok(ConnectionList(connections=records, total=len(records)))
+    return ActionResult.success(ConnectionList(connections=records, total=len(records)), summary="List connections completed successfully.")
 
 @chat.function(
     "disconnect_freeagent",
@@ -134,4 +134,4 @@ async def disconnect_freeagent(ctx, params: ConnectionIdParams) -> ActionResult[
         new_conns[0]["is_active"] = True
 
     await _save_connections(ctx, new_conns)
-    return ActionResult.ok(DeleteResult(id=target_id, deleted=True, message=f"FreeAgent connection {target_id} disconnected."))
+    return ActionResult.success(DeleteResult(id=target_id, deleted=True, message=f"FreeAgent connection {target_id} disconnected."), summary="Disconnect freeagent completed successfully.")
