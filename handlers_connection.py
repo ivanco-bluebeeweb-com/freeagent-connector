@@ -82,7 +82,7 @@ async def connect_freeagent(ctx, params: ConnectParams) -> ActionResult[Connecti
         environment=params.environment,
         base_url=client.base_url,
         is_active=True
-    ))
+    ), summary="Freeagent connected.")
 
 @chat.function(
     "list_connections",
