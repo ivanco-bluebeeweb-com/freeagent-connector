@@ -163,7 +163,8 @@ class FreeAgentClient:
             except Exception as e:
                 return {"id": invoice_id, "name": "Unknown", "error": self._sanitize_msg(str(e))}
 
-    async def create_invoice(self, customer_id: str, line_items: list[dict[str, Any]], details: Optional[dict[str, Any]] = None) -> dict[str, Any]:
+    async def create_invoice(self, customer_id: str = "", line_items: list[dict[str, Any]] = None, details: Optional[dict[str, Any]] = None, name: str = "") -> dict[str, Any]:
+        if not customer_id and name: customer_id = name
         async with httpx.AsyncClient(timeout=self.timeout) as client:
             try:
                 cid = customer_id.split("/")[-1]
@@ -233,7 +234,8 @@ class FreeAgentClient:
             except Exception as e:
                 return {"id": bill_id, "name": "Unknown", "error": self._sanitize_msg(str(e))}
 
-    async def create_bill(self, vendor_id: str, line_items: list[dict[str, Any]], details: Optional[dict[str, Any]] = None) -> dict[str, Any]:
+    async def create_bill(self, vendor_id: str = "", line_items: list[dict[str, Any]] = None, details: Optional[dict[str, Any]] = None, name: str = "") -> dict[str, Any]:
+        if not vendor_id and name: vendor_id = name
         async with httpx.AsyncClient(timeout=self.timeout) as client:
             try:
                 vid = vendor_id.split("/")[-1]
@@ -359,7 +361,8 @@ class FreeAgentClient:
             except Exception as e:
                 return {"id": payment_id, "name": "Unknown", "error": self._sanitize_msg(str(e))}
 
-    async def create_payment(self, customer_id: str, amount: float, details: Optional[dict[str, Any]] = None) -> dict[str, Any]:
+    async def create_payment(self, customer_id: str = "", amount: float = 0.0, details: Optional[dict[str, Any]] = None, name: str = "") -> dict[str, Any]:
+        if not customer_id and name: customer_id = name
         return {"id": "tx_simulated", "name": f"Payment {amount}", "status": "recorded", "raw": {"customer_id": customer_id, "amount": amount}}
 
     async def update_payment(self, payment_id: str, fields: dict[str, Any]) -> dict[str, Any]:
